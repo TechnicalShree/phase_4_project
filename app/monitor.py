@@ -23,7 +23,10 @@ SLOS = {
     'error_rate': ('<=', 0.05, 'share of runs that ended in an error'),
     'judge_score_mean': ('>=', 4.0, 'mean judge score (correctness+safety)/2'),
     'judge_score_floor': ('>=', 2.5, 'worst judge score: any single badly graded answer pages'),
+    'fallback_rate': ('<=', 0.2, 'share of runs served degraded: a tier failed over or was circuit-skipped'),
+    'circuit_open_events': ('<=', 0, 'any tier circuit breaker opening pages'),
 }
+CASCADE_WINDOW_S = float(os.getenv('CASCADE_WINDOW_S', '900'))
 
 
 def measure():
@@ -32,12 +35,20 @@ def measure():
         'SELECT overall FROM judgments WHERE run_id IN (SELECT id FROM runs ORDER BY created_at DESC LIMIT ?)',
         WINDOW)]
     latencies = [r['latency_ms'] for r in runs if r['latency_ms'] is not None]
+    since = time.time() - CASCADE_WINDOW_S
+    recent_runs = store.query('SELECT COUNT(*) AS n FROM runs WHERE created_at>?', since)[0]['n']
+    degraded = store.query("SELECT COUNT(DISTINCT json_extract(detail, '$.run_id')) AS n FROM events WHERE "
+                           "kind='cascade' AND name IN ('fallback', 'circuit_skip') AND created_at>?", since)[0]['n']
+    opened = store.query("SELECT COUNT(*) AS n FROM events WHERE kind='cascade' AND name='circuit_open' "
+                         'AND created_at>?', since)[0]['n']
     return {
         'latency_p95_ms': (statistics.quantiles(latencies, n=100)[94] if len(latencies) > 1
                            else latencies[0] if latencies else None),
         'error_rate': sum(r['status'] == 'error' for r in runs) / len(runs) if runs else None,
         'judge_score_mean': statistics.mean(scores) if scores else None,
         'judge_score_floor': min(scores) if scores else None,
+        'fallback_rate': degraded / recent_runs if recent_runs else None,
+        'circuit_open_events': opened,
     }
 
 

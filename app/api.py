@@ -1,5 +1,6 @@
 """FastAPI gateway in front of the campus IT swarm."""
 import json
+import os
 import queue
 import threading
 import time
@@ -10,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel, Field
 
-from app import cache, llm, store, tracing
+from app import cache, cascade, llm, store, tracing
 from app.events import sse
 from app.swarm import GRAPH
 from app.tracing import ids, tracer
@@ -130,7 +131,38 @@ def fail_orphaned_jobs():
 
 @app.get('/stats')
 def stats():
-    return {'cache': cache.stats(), **llm.budget_report()}
+    specs = llm.tiers()
+    return {'cache': cache.stats(), **llm.budget_report(),
+            'breakers': {position: {'model': spec, 'state': cascade.breaker(position).state,
+                                    'consecutive_failures': cascade.breaker(position).failures}
+                         for position, spec in enumerate(specs)},
+            'armed_faults': cascade.FAULTS}
+
+
+class Fault(BaseModel):
+    position: int = Field(ge=0, le=2)
+    after_chunks: int = Field(0, ge=0)
+    count: int = Field(1, ge=1, le=100)
+
+
+def require_fault_injection():
+    if os.getenv('ENABLE_FAULT_INJECTION') != '1':
+        raise HTTPException(403, 'fault injection is disabled; set ENABLE_FAULT_INJECTION=1 (never in production)')
+
+
+@app.post('/admin/fault')
+def inject_fault(fault: Fault):
+    """Arm a deliberate failure: the next `count` calls to tier `position` die after `after_chunks` chunks."""
+    require_fault_injection()
+    cascade.inject(fault.position, fault.after_chunks, fault.count)
+    return {'armed': cascade.FAULTS}
+
+
+@app.delete('/admin/fault')
+def clear_fault():
+    require_fault_injection()
+    cascade.clear_faults()
+    return {'armed': cascade.FAULTS}
 
 
 @app.on_event('startup')
