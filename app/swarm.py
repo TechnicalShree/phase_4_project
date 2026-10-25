@@ -10,6 +10,7 @@ from langgraph.graph import END, START, StateGraph
 from app import llm
 from app.domain import (ACCOUNT_ID, CATEGORIES, CRITICAL, check_service_status, keyword_triage,
                         lookup_campus_account, search_knowledge_base)
+from app.tracing import node_context, tracer
 
 
 class State(TypedDict, total=False):
@@ -53,7 +54,10 @@ def researcher(state):
         calls.append(('check_service_status', {'service': 'wifi'}, check_service_status))
     results = []
     for name, args, fn in calls:
-        result = fn(*args.values())
+        with tracer.start_as_current_span(f'tool.{name}', context=node_context(), attributes={
+                'openinference.span.kind': 'TOOL', 'tool.name': name, 'input.value': json.dumps(args)}) as span:
+            result = fn(*args.values())
+            span.set_attribute('output.value', json.dumps(result))
         get_stream_writer()({'type': 'tool_call', 'tool': name, 'args': args, 'result': result})
         results.append({'tool': name, 'args': args, 'result': result})
     return {'tool_results': results}

@@ -7,12 +7,15 @@ import uuid
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
+from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel, Field
 
-from app import llm, store
+from app import llm, store, tracing
 from app.events import sse
 from app.swarm import GRAPH
+from app.tracing import ids, tracer
 
+tracing.setup()
 app = FastAPI(title='Campus IT Swarm Gateway')
 
 
@@ -24,20 +27,27 @@ def run_swarm(question, emit=lambda event: None):
     """Run the swarm once, forwarding agent/tool/token events to `emit`, and log the run."""
     run_id, start, state, error = uuid.uuid4().hex[:12], time.perf_counter(), {}, None
     emit({'type': 'run', 'run_id': run_id})
-    try:
-        for mode, chunk in GRAPH.stream({'question': question}, stream_mode=['custom', 'values']):
-            if mode == 'custom':
-                emit(chunk)
-            else:
-                state = chunk
-    except Exception as exc:  # recorded as an error run; the monitor counts these
-        error = f'{type(exc).__name__}: {exc}'
+    with tracer.start_as_current_span('campus_swarm.run', attributes={
+            'openinference.span.kind': 'CHAIN', 'input.value': question, 'run.id': run_id}) as span:
+        trace_id, span_id = ids(span)
+        try:
+            for mode, chunk in GRAPH.stream({'question': question}, stream_mode=['custom', 'values']):
+                if mode == 'custom':
+                    emit(chunk)
+                else:
+                    state = chunk
+        except Exception as exc:  # recorded as an error run; the monitor counts these
+            error = f'{type(exc).__name__}: {exc}'
+            span.set_status(Status(StatusCode.ERROR, error))
+        span.set_attribute('output.value', state.get('answer') or '')
     latency_ms = round((time.perf_counter() - start) * 1000, 1)
-    store.execute('INSERT INTO runs(id, question, answer, category, severity, status, error, latency_ms) '
-                  'VALUES (?,?,?,?,?,?,?,?)', run_id, question, state.get('answer'), state.get('category'),
-                  state.get('severity'), 'error' if error else 'ok', error, latency_ms)
-    return {'run_id': run_id, 'status': 'error' if error else 'ok', 'error': error, 'latency_ms': latency_ms,
-            'category': state.get('category'), 'severity': state.get('severity'), 'answer': state.get('answer')}
+    store.execute('INSERT INTO runs(id, trace_id, span_id, question, answer, category, severity, tool_results, '
+                  'status, error, latency_ms) VALUES (?,?,?,?,?,?,?,?,?,?,?)', run_id, trace_id, span_id, question,
+                  state.get('answer'), state.get('category'), state.get('severity'),
+                  json.dumps(state.get('tool_results', [])), 'error' if error else 'ok', error, latency_ms)
+    return {'run_id': run_id, 'trace_id': trace_id, 'status': 'error' if error else 'ok', 'error': error,
+            'latency_ms': latency_ms, 'category': state.get('category'), 'severity': state.get('severity'),
+            'answer': state.get('answer')}
 
 
 @app.get('/health')

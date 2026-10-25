@@ -7,6 +7,8 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
+from app.tracing import node_context, tracer
+
 load_dotenv()
 DEMO_TIERS = ['scripted:demo-frontier', 'scripted:demo-utility', 'static']
 ENDPOINTS = {  # kind -> (base_url, api-key env var)
@@ -51,7 +53,15 @@ def stream_text(spec, messages, offline):
 
 
 def stream(agent, messages, offline):
-    yield from stream_text(tiers()[0], messages, offline)
+    spec = tiers()[0]
+    with tracer.start_as_current_span(f'llm.{agent}', context=node_context(), attributes={
+            'openinference.span.kind': 'LLM', 'llm.model_name': spec, 'agent': agent,
+            'input.value': str(messages[-1][1])}) as span:
+        text = ''
+        for chunk in stream_text(spec, messages, offline):
+            text += chunk
+            yield chunk
+        span.set_attribute('output.value', text)
 
 
 def complete(agent, messages, offline):
