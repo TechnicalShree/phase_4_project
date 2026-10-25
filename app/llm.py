@@ -18,6 +18,11 @@ ENDPOINTS = {  # kind -> (base_url, api-key env var)
     'openai': (os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1'), 'OPENAI_API_KEY'),
     'ollama': (os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434/v1'), None),
 }
+# Router: each agent has a cost tier; a cost tier is a starting position in the tier list.
+ROUTES = {'triage': 'utility', 'specialist': 'utility', 'writer': 'frontier', 'judge': 'frontier'}
+START_POSITION = {'frontier': 0, 'utility': 1}
+BUDGETS = {'frontier': float(os.getenv('BUDGET_FRONTIER_USD', '1.00')),
+           'utility': float(os.getenv('BUDGET_UTILITY_USD', '0.25'))}
 
 
 def tiers():
@@ -67,26 +72,49 @@ def current_run_id():
         return None
 
 
-def record(agent, position, spec, messages, text):
+def record(agent, cost_tier, position, spec, messages, text):
     # ponytail: ~4 chars/token estimate; read provider usage_metadata if billing-grade accuracy is needed.
     tokens = (sum(len(str(m[1])) for m in messages) + len(text)) // 4
     cost = tokens * price(position) / 1e6
-    store.execute('INSERT INTO llm_calls(run_id, agent, position, model, tokens, cost_usd) VALUES (?,?,?,?,?,?)',
-                  current_run_id(), agent, position, spec, tokens, cost)
+    store.execute('INSERT INTO llm_calls(run_id, agent, cost_tier, position, model, tokens, cost_usd) '
+                  'VALUES (?,?,?,?,?,?,?)', current_run_id(), agent, cost_tier, position, spec, tokens, cost)
+
+
+def spent(cost_tier, window_s=86400):
+    return store.query('SELECT COALESCE(SUM(cost_usd), 0) AS usd FROM llm_calls WHERE cost_tier=? AND created_at>?',
+                       cost_tier, time.time() - window_s)[0]['usd']
+
+
+def route(agent):
+    """Agent -> (cost tier, reason). ROUTE_<AGENT>=frontier|utility overrides; an exhausted frontier budget
+    downgrades to utility rather than overspending."""
+    override = os.getenv(f'ROUTE_{agent.upper()}')
+    cost_tier, reason = (override, 'override') if override in START_POSITION else (ROUTES.get(agent, 'utility'),
+                                                                                  'default')
+    if cost_tier == 'frontier' and spent('frontier') >= BUDGETS['frontier']:
+        return 'utility', 'frontier budget exhausted'
+    return cost_tier, reason
+
+
+def budget_report():
+    return {'routes': {agent: route(agent)[0] for agent in ROUTES},
+            'budget_usd_24h': {t: {'budget': b, 'spent': round(spent(t), 6), 'remaining': round(b - spent(t), 6)}
+                               for t, b in BUDGETS.items()}}
 
 
 def stream(agent, messages, offline):
-    position = 0
+    cost_tier, reason = route(agent)
+    position = START_POSITION[cost_tier]
     spec = tiers()[position]
     with tracer.start_as_current_span(f'llm.{agent}', context=node_context(), attributes={
-            'openinference.span.kind': 'LLM', 'llm.model_name': spec, 'agent': agent,
-            'input.value': str(messages[-1][1])}) as span:
+            'openinference.span.kind': 'LLM', 'llm.model_name': spec, 'agent': agent, 'route.cost_tier': cost_tier,
+            'route.reason': reason, 'input.value': str(messages[-1][1])}) as span:
         text = ''
         for chunk in stream_text(spec, messages, offline):
             text += chunk
             yield chunk
         span.set_attribute('output.value', text)
-        record(agent, position, spec, messages, text)
+        record(agent, cost_tier, position, spec, messages, text)
 
 
 def complete(agent, messages, offline):

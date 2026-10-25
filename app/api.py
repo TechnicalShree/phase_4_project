@@ -130,7 +130,7 @@ def fail_orphaned_jobs():
 
 @app.get('/stats')
 def stats():
-    return {'cache': cache.stats()}
+    return {'cache': cache.stats(), **llm.budget_report()}
 
 
 @app.on_event('startup')

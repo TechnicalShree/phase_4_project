@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS judgments (
   run_id TEXT PRIMARY KEY, correctness INTEGER, safety INTEGER, overall REAL, reason TEXT, judge TEXT,
   created_at REAL DEFAULT (unixepoch('subsec')));
 CREATE TABLE IF NOT EXISTS llm_calls (
-  id INTEGER PRIMARY KEY, run_id TEXT, agent TEXT, position INTEGER, model TEXT, tokens INTEGER, cost_usd REAL,
+  id INTEGER PRIMARY KEY, run_id TEXT, agent TEXT, cost_tier TEXT, position INTEGER, model TEXT, tokens INTEGER, cost_usd REAL,
   created_at REAL DEFAULT (unixepoch('subsec')));
 CREATE TABLE IF NOT EXISTS cache (
   id INTEGER PRIMARY KEY, question TEXT NOT NULL, ids TEXT NOT NULL, embedding BLOB NOT NULL, result TEXT NOT NULL,
