@@ -1,4 +1,5 @@
 """Model providers. A tier spec is 'kind:model' — an OpenAI-compatible endpoint, a scripted test double, or static."""
+import json
 import os
 import re
 import time
@@ -6,9 +7,10 @@ from functools import lru_cache
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langgraph.config import get_config
+from langgraph.config import get_config, get_stream_writer
+from opentelemetry import trace
 
-from app import store
+from app import cascade, store
 from app.tracing import node_context, tracer
 
 load_dotenv()
@@ -102,20 +104,56 @@ def budget_report():
                                for t, b in BUDGETS.items()}}
 
 
-def stream(agent, messages, offline):
-    cost_tier, reason = route(agent)
-    position = START_POSITION[cost_tier]
-    spec = tiers()[position]
-    with tracer.start_as_current_span(f'llm.{agent}', context=node_context(), attributes={
-            'openinference.span.kind': 'LLM', 'llm.model_name': spec, 'agent': agent, 'route.cost_tier': cost_tier,
-            'route.reason': reason, 'input.value': str(messages[-1][1])}) as span:
+def emit(event):
+    try:
+        get_stream_writer()(event)
+    except Exception:  # outside a graph run (judge, scripts): nothing to stream to
+        pass
+
+
+def attempt(agent, cost_tier, position, spec, parent):
+    """One tier as a cascade provider: its own LLM span, cost recorded even for a partial (failed) attempt."""
+    def provider(messages, offline):
         text = ''
-        for chunk in stream_text(spec, messages, offline):
-            text += chunk
-            yield chunk
-        span.set_attribute('output.value', text)
-        record(agent, cost_tier, position, spec, messages, text)
+        with tracer.start_as_current_span(f'llm.{agent}.tier{position}', context=parent, attributes={
+                'openinference.span.kind': 'LLM', 'llm.model_name': spec, 'tier.position': position,
+                'input.value': str(messages[-1][1])}) as span:
+            try:
+                for chunk in stream_text(spec, messages, offline):
+                    text += chunk
+                    yield chunk
+            finally:
+                span.set_attribute('output.value', text)
+                record(agent, cost_tier, position, spec, messages, text)
+    return provider
+
+
+def stream(agent, messages, offline, resume=True):
+    """Yield (position, model, chunk): start at the agent's routed cost tier, fall back down the cascade."""
+    cost_tier, reason = route(agent)
+    specs = tiers()
+    with tracer.start_as_current_span(f'llm.{agent}', context=node_context(), attributes={
+            'openinference.span.kind': 'CHAIN', 'agent': agent, 'route.cost_tier': cost_tier,
+            'route.reason': reason, 'input.value': str(messages[-1][1])}) as span:
+        parent = trace.set_span_in_context(span)
+        providers = [attempt(agent, cost_tier, p, spec, parent) for p, spec in enumerate(specs)]
+
+        def on_event(kind, **info):
+            info = {'agent': agent, 'run_id': current_run_id(), 'model': specs[info['position']], **info}
+            span.add_event(kind, {k: str(v) for k, v in info.items()})
+            store.execute("INSERT INTO events(kind, name, detail) VALUES ('cascade', ?, ?)", kind, json.dumps(info))
+            emit({'type': kind, **info})
+
+        served = []
+        for position, chunk in cascade.stream(providers, messages, offline, START_POSITION[cost_tier], resume,
+                                              on_event):
+            if position not in served:
+                served.append(position)
+            yield position, specs[position], chunk
+        span.set_attribute('cascade.served_by', json.dumps(served))
 
 
 def complete(agent, messages, offline):
-    return ''.join(stream(agent, messages, offline))
+    """Non-streamed call (structured output): a failed tier's partial text is discarded, the next restarts."""
+    parts = list(stream(agent, messages, offline, resume=False))
+    return ''.join(chunk for position, _, chunk in parts if position == parts[-1][0]) if parts else ''

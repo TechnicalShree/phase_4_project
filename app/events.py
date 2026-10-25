@@ -24,6 +24,22 @@ class ToolCallEvent(BaseModel):
 class TokenEvent(BaseModel):
     type: Literal['token']
     text: str
+    tier: int
+    model: str
+
+
+class CascadeEvent(BaseModel):
+    """fallback: tier `position` failed (after `emitted_chars`) and `next_position` takes over the same stream.
+    circuit_open: that failure tripped the tier's breaker. circuit_skip: an open breaker skipped the tier."""
+    type: Literal['fallback', 'circuit_open', 'circuit_skip']
+    agent: str
+    run_id: str | None
+    position: int
+    model: str
+    state: str | None = None
+    error: str | None = None
+    emitted_chars: int | None = None
+    next_position: int | None = None
 
 
 class CacheHitEvent(BaseModel):
@@ -38,7 +54,7 @@ class FinalEvent(BaseModel):
     result: dict
 
 
-Event = TypeAdapter(Annotated[RunEvent | AgentEvent | ToolCallEvent | TokenEvent | CacheHitEvent | FinalEvent,
+Event = TypeAdapter(Annotated[RunEvent | AgentEvent | ToolCallEvent | TokenEvent | CascadeEvent | CacheHitEvent | FinalEvent,
                               Field(discriminator='type')])
 
 

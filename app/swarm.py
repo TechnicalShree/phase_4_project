@@ -93,7 +93,7 @@ def writer(state):
     announce('writer')
     emit = get_stream_writer()
     answer = ''
-    for chunk in llm.stream('writer', [
+    for position, model, chunk in llm.stream('writer', [
         ('system', 'You are campus IT support writing the final reply. Give a short diagnosis and numbered '
          'next steps (max 120 words) using ONLY the facts and diagnosis below. Never claim to have changed, '
          'reset or deleted an account. If severity is high, say a ticket should be opened.\n'
@@ -101,7 +101,7 @@ def writer(state):
          f"Diagnosis: {state['diagnosis']}"),
         ('human', state['question'])], offline_answer(state)):
         answer += chunk
-        emit({'type': 'token', 'text': chunk})
+        emit({'type': 'token', 'text': chunk, 'tier': position, 'model': model})
     return {'answer': answer.strip()}
 
 
