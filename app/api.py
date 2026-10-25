@@ -1,11 +1,15 @@
 """FastAPI gateway in front of the campus IT swarm."""
+import queue
+import threading
 import time
 import uuid
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app import llm, store
+from app.events import sse
 from app.swarm import GRAPH
 
 app = FastAPI(title='Campus IT Swarm Gateway')
@@ -18,6 +22,7 @@ class Ask(BaseModel):
 def run_swarm(question, emit=lambda event: None):
     """Run the swarm once, forwarding agent/tool/token events to `emit`, and log the run."""
     run_id, start, state, error = uuid.uuid4().hex[:12], time.perf_counter(), {}, None
+    emit({'type': 'run', 'run_id': run_id})
     try:
         for mode, chunk in GRAPH.stream({'question': question}, stream_mode=['custom', 'values']):
             if mode == 'custom':
@@ -45,3 +50,20 @@ def analyze(body: Ask):
     if result['status'] == 'error':
         raise HTTPException(502, result)
     return result
+
+
+@app.post('/analyze/stream')
+def analyze_stream(body: Ask):
+    """SSE: run, agent, tool_call and token events as they happen, then one final (or error) event.
+
+    The swarm runs in its own thread, so a client disconnect never aborts a run half-way.
+    """
+    events = queue.Queue()
+
+    def work():
+        result = run_swarm(body.question, events.put)
+        events.put({'type': 'error' if result['status'] == 'error' else 'final', 'result': result})
+        events.put(None)
+
+    threading.Thread(target=work, daemon=True).start()
+    return StreamingResponse((sse(event) for event in iter(events.get, None)), media_type='text/event-stream')
