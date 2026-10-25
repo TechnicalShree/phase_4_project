@@ -1,0 +1,16 @@
+$ python -m pytest -v tests
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.1.1, pluggy-1.7.0 -- /Users/krushnaraut/practice/newton_school/phase_4_project/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/krushnaraut/practice/newton_school/phase_4_project
+plugins: langsmith-0.14.12, arize-phoenix-client-3.5.0, anyio-4.15.1, platformdirs-4.13.5
+collecting ... collected 6 items
+
+tests/test_gateway.py::test_sync_analyze PASSED                          [ 16%]
+tests/test_gateway.py::test_stream_event_order_and_tokens_match_answer PASSED [ 33%]
+tests/test_gateway.py::test_async_job_completes PASSED                   [ 50%]
+tests/test_gateway.py::test_identical_query_hits_cache PASSED            [ 66%]
+tests/test_gateway.py::test_mid_stream_hot_swap_keeps_one_stream PASSED  [ 83%]
+tests/test_gateway.py::test_cascade_standalone_self_check PASSED         [100%]
+
+============================== 6 passed in 1.03s ===============================

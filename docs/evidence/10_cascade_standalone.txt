@@ -1,0 +1,13 @@
+$ python -m app.cascade
+healthy                            tier 0: one two three four five six seven eight
+primary cut after 3 chunks         tier 0: one two three | tier 1: four five six seven eight
+primary fails at once (x2)         tier 1: one two three four five six seven eight
+primary fails at once (x2)         tier 1: one two three four five six seven eight
+circuit open: primary skipped      tier 1: one two three four five six seven eight
+after cooldown: half-open trial    tier 0: one two three four five six seven eight
+  event fallback      {'position': 0, 'error': 'InjectedFault: injected failure: tier 0 cable cut after 3 chunks', 'emitted_chars': 14, 'next_position': 1}
+  event fallback      {'position': 0, 'error': 'InjectedFault: injected failure: tier 0 cable cut after 0 chunks', 'emitted_chars': 0, 'next_position': 1}
+  event fallback      {'position': 0, 'error': 'InjectedFault: injected failure: tier 0 cable cut after 0 chunks', 'emitted_chars': 0, 'next_position': 1}
+  event circuit_open  {'position': 0, 'state': 'open'}
+  event circuit_skip  {'position': 0, 'state': 'open'}
+CASCADE SELF-CHECK: PASS

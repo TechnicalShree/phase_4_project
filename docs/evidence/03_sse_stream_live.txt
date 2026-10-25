@@ -1,0 +1,179 @@
+$ curl -sN -X POST localhost:8000/analyze/stream -H 'Content-Type: application/json' -d '{"question":"Wi-Fi keeps dropping in North Hall for STU-1001"}'   (each line prefixed with arrival time, seconds)
+ 887.693  event: run
+ 887.715  data: {"type":"run","run_id":"9a3fef2aded9"}
+ 887.735  event: agent
+ 887.757  data: {"type":"agent","agent":"triage"}
+ 891.428  event: agent
+ 891.452  data: {"type":"agent","agent":"researcher"}
+ 891.471  event: tool_call
+ 891.490  data: {"type":"tool_call","tool":"search_knowledge_base","args":{"category":"network"},"result":"Check the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket."}
+ 891.508  event: tool_call
+ 891.526  data: {"type":"tool_call","tool":"lookup_campus_account","args":{"account_id":"STU-1001"},"result":{"role":"student","status":"active","mfa":"enrolled","residence":"North Hall"}}
+ 891.544  event: tool_call
+ 891.562  data: {"type":"tool_call","tool":"check_service_status","args":{"service":"wifi"},"result":{"service":"wifi","status":"degraded","source":"mock campus status registry"}}
+ 891.579  event: agent
+ 891.596  data: {"type":"agent","agent":"specialist"}
+ 893.129  event: agent
+ 893.148  data: {"type":"agent","agent":"writer"}
+ 906.674  event: token
+ 906.699  data: {"type":"token","text":"The","tier":0,"model":"ollama:gemma4:26b"}
+ 906.719  event: token
+ 906.745  data: {"type":"token","text":" Wi","tier":0,"model":"ollama:gemma4:26b"}
+ 906.765  event: token
+ 906.789  data: {"type":"token","text":"-","tier":0,"model":"ollama:gemma4:26b"}
+ 906.815  event: token
+ 906.839  data: {"type":"token","text":"Fi","tier":0,"model":"ollama:gemma4:26b"}
+ 906.864  event: token
+ 906.885  data: {"type":"token","text":" degradation","tier":0,"model":"ollama:gemma4:26b"}
+ 906.907  event: token
+ 906.930  data: {"type":"token","text":" in","tier":0,"model":"ollama:gemma4:26b"}
+ 906.952  event: token
+ 906.972  data: {"type":"token","text":" North","tier":0,"model":"ollama:gemma4:26b"}
+ 906.992  event: token
+ 907.013  data: {"type":"token","text":" Hall","tier":0,"model":"ollama:gemma4:26b"}
+ 907.034  event: token
+ 907.056  data: {"type":"token","text":" is","tier":0,"model":"ollama:gemma4:26b"}
+ 907.081  event: token
+ 907.101  data: {"type":"token","text":" likely","tier":0,"model":"ollama:gemma4:26b"}
+ 907.121  event: token
+ 907.140  data: {"type":"token","text":" due","tier":0,"model":"ollama:gemma4:26b"}
+ 907.160  event: token
+ 907.189  data: {"type":"token","text":" to","tier":0,"model":"ollama:gemma4:26b"}
+ 907.216  event: token
+ 907.238  data: {"type":"token","text":" the","tier":0,"model":"ollama:gemma4:26b"}
+ 907.260  event: token
+ 907.282  data: {"type":"token","text":" access","tier":0,"model":"ollama:gemma4:26b"}
+ 907.305  event: token
+ 907.329  data: {"type":"token","text":" point","tier":0,"model":"ollama:gemma4:26b"}
+ 907.349  event: token
+ 907.369  data: {"type":"token","text":" NH","tier":0,"model":"ollama:gemma4:26b"}
+ 907.391  event: token
+ 907.415  data: {"type":"token","text":"-","tier":0,"model":"ollama:gemma4:26b"}
+ 907.437  event: token
+ 907.462  data: {"type":"token","text":"0","tier":0,"model":"ollama:gemma4:26b"}
+ 907.484  event: token
+ 907.505  data: {"type":"token","text":"2","tier":0,"model":"ollama:gemma4:26b"}
+ 907.525  event: token
+ 907.546  data: {"type":"token","text":" being","tier":0,"model":"ollama:gemma4:26b"}
+ 907.567  event: token
+ 907.587  data: {"type":"token","text":" degraded","tier":0,"model":"ollama:gemma4:26b"}
+ 907.610  event: token
+ 907.632  data: {"type":"token","text":",","tier":0,"model":"ollama:gemma4:26b"}
+ 907.657  event: token
+ 907.677  data: {"type":"token","text":" which","tier":0,"model":"ollama:gemma4:26b"}
+ 907.696  event: token
+ 907.715  data: {"type":"token","text":" affects","tier":0,"model":"ollama:gemma4:26b"}
+ 907.734  event: token
+ 907.755  data: {"type":"token","text":" building","tier":0,"model":"ollama:gemma4:26b"}
+ 907.776  event: token
+ 907.794  data: {"type":"token","text":"-","tier":0,"model":"ollama:gemma4:26b"}
+ 907.815  event: token
+ 907.834  data: {"type":"token","text":"wide","tier":0,"model":"ollama:gemma4:26b"}
+ 907.853  event: token
+ 907.877  data: {"type":"token","text":" connectivity","tier":0,"model":"ollama:gemma4:26b"}
+ 907.900  event: token
+ 907.922  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 907.941  event: token
+ 907.961  data: {"type":"token","text":"\n\n","tier":0,"model":"ollama:gemma4:26b"}
+ 907.981  event: token
+ 908.001  data: {"type":"token","text":"1","tier":0,"model":"ollama:gemma4:26b"}
+ 908.020  event: token
+ 908.042  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 908.061  event: token
+ 908.082  data: {"type":"token","text":" Check","tier":0,"model":"ollama:gemma4:26b"}
+ 908.102  event: token
+ 908.122  data: {"type":"token","text":" the","tier":0,"model":"ollama:gemma4:26b"}
+ 908.142  event: token
+ 908.162  data: {"type":"token","text":" campus","tier":0,"model":"ollama:gemma4:26b"}
+ 908.182  event: token
+ 908.202  data: {"type":"token","text":" status","tier":0,"model":"ollama:gemma4:26b"}
+ 908.222  event: token
+ 908.244  data: {"type":"token","text":" page","tier":0,"model":"ollama:gemma4:26b"}
+ 908.266  event: token
+ 908.288  data: {"type":"token","text":" for","tier":0,"model":"ollama:gemma4:26b"}
+ 908.308  event: token
+ 908.333  data: {"type":"token","text":" updates","tier":0,"model":"ollama:gemma4:26b"}
+ 908.360  event: token
+ 908.388  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 908.407  event: token
+ 908.426  data: {"type":"token","text":"\n","tier":0,"model":"ollama:gemma4:26b"}
+ 908.445  event: token
+ 908.463  data: {"type":"token","text":"2","tier":0,"model":"ollama:gemma4:26b"}
+ 908.482  event: token
+ 908.501  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 908.521  event: token
+ 908.545  data: {"type":"token","text":" Re","tier":0,"model":"ollama:gemma4:26b"}
+ 908.566  event: token
+ 908.584  data: {"type":"token","text":"connect","tier":0,"model":"ollama:gemma4:26b"}
+ 908.602  event: token
+ 908.621  data: {"type":"token","text":" your","tier":0,"model":"ollama:gemma4:26b"}
+ 908.638  event: token
+ 908.655  data: {"type":"token","text":" device","tier":0,"model":"ollama:gemma4:26b"}
+ 908.672  event: token
+ 908.691  data: {"type":"token","text":" to","tier":0,"model":"ollama:gemma4:26b"}
+ 908.711  event: token
+ 908.731  data: {"type":"token","text":" the","tier":0,"model":"ollama:gemma4:26b"}
+ 908.749  event: token
+ 908.766  data: {"type":"token","text":" Campus","tier":0,"model":"ollama:gemma4:26b"}
+ 908.783  event: token
+ 908.800  data: {"type":"token","text":"-","tier":0,"model":"ollama:gemma4:26b"}
+ 908.825  event: token
+ 908.846  data: {"type":"token","text":"Secure","tier":0,"model":"ollama:gemma4:26b"}
+ 908.865  event: token
+ 908.882  data: {"type":"token","text":" network","tier":0,"model":"ollama:gemma4:26b"}
+ 908.899  event: token
+ 908.916  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 908.934  event: token
+ 908.951  data: {"type":"token","text":"\n","tier":0,"model":"ollama:gemma4:26b"}
+ 908.970  event: token
+ 908.988  data: {"type":"token","text":"3","tier":0,"model":"ollama:gemma4:26b"}
+ 909.009  event: token
+ 909.027  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 909.045  event: token
+ 909.062  data: {"type":"token","text":" Renew","tier":0,"model":"ollama:gemma4:26b"}
+ 909.081  event: token
+ 909.108  data: {"type":"token","text":" your","tier":0,"model":"ollama:gemma4:26b"}
+ 909.127  event: token
+ 909.146  data: {"type":"token","text":" device","tier":0,"model":"ollama:gemma4:26b"}
+ 909.164  event: token
+ 909.184  data: {"type":"token","text":"'","tier":0,"model":"ollama:gemma4:26b"}
+ 909.202  event: token
+ 909.222  data: {"type":"token","text":"s","tier":0,"model":"ollama:gemma4:26b"}
+ 909.271  event: token
+ 909.288  data: {"type":"token","text":" DHCP","tier":0,"model":"ollama:gemma4:26b"}
+ 909.305  event: token
+ 909.324  data: {"type":"token","text":" lease","tier":0,"model":"ollama:gemma4:26b"}
+ 909.341  event: token
+ 909.358  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 909.375  event: token
+ 909.392  data: {"type":"token","text":"\n","tier":0,"model":"ollama:gemma4:26b"}
+ 909.409  event: token
+ 909.426  data: {"type":"token","text":"4","tier":0,"model":"ollama:gemma4:26b"}
+ 909.444  event: token
+ 909.463  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 909.480  event: token
+ 909.496  data: {"type":"token","text":" If","tier":0,"model":"ollama:gemma4:26b"}
+ 909.514  event: token
+ 909.533  data: {"type":"token","text":" the","tier":0,"model":"ollama:gemma4:26b"}
+ 909.550  event: token
+ 909.569  data: {"type":"token","text":" issue","tier":0,"model":"ollama:gemma4:26b"}
+ 909.587  event: token
+ 909.604  data: {"type":"token","text":" persists","tier":0,"model":"ollama:gemma4:26b"}
+ 909.621  event: token
+ 909.639  data: {"type":"token","text":",","tier":0,"model":"ollama:gemma4:26b"}
+ 909.656  event: token
+ 909.672  data: {"type":"token","text":" a","tier":0,"model":"ollama:gemma4:26b"}
+ 909.689  event: token
+ 909.706  data: {"type":"token","text":" network","tier":0,"model":"ollama:gemma4:26b"}
+ 909.723  event: token
+ 909.739  data: {"type":"token","text":" ticket","tier":0,"model":"ollama:gemma4:26b"}
+ 909.756  event: token
+ 909.774  data: {"type":"token","text":" should","tier":0,"model":"ollama:gemma4:26b"}
+ 909.810  event: token
+ 909.829  data: {"type":"token","text":" be","tier":0,"model":"ollama:gemma4:26b"}
+ 909.847  event: token
+ 909.867  data: {"type":"token","text":" opened","tier":0,"model":"ollama:gemma4:26b"}
+ 909.887  event: token
+ 909.908  data: {"type":"token","text":".","tier":0,"model":"ollama:gemma4:26b"}
+ 909.930  event: final
+ 909.952  data: {"type":"final","result":{"run_id":"9a3fef2aded9","trace_id":"42139aacdec11609d7065b96f8ce011a","status":"ok","error":null,"latency_ms":20782.4,"cost_usd":0.000743,"cached":false,"category":"network","severity":"low","answer":"The Wi-Fi degradation in North Hall is likely due to the access point NH-02 being degraded, which affects building-wide connectivity.\n\n1. Check the campus status page for updates.\n2. Reconnect your device to the Campus-Secure network.\n3. Renew your device's DHCP lease.\n4. If the issue persists, a network ticket should be opened."}}

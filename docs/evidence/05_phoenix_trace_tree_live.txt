@@ -1,0 +1,22 @@
+$ python scripts/trace_tree.py 42139aacdec11609d7065b96f8ce011a
+trace 42139aacdec11609d7065b96f8ce011a from http://localhost:6006 (project campus-it-swarm)
+campus_swarm.run                         CHAIN       20766 ms  UNSET  
+  LangGraph                              CHAIN       20762 ms  OK     
+    triage                               CHAIN        3737 ms  OK     
+      llm.triage                         CHAIN        3735 ms  UNSET  route.cost_tier=utility cascade.served_by=[1]
+        llm.triage.tier1                 LLM          3735 ms  UNSET  llm.model_name=ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest tier.position=1
+      ChatOpenAI                         LLM          3724 ms  OK     llm.model_name=qcwind/qwen3-8b-instruct-Q4-K-M:latest
+    researcher                           CHAIN           1 ms  OK     
+      tool.search_knowledge_base         TOOL            0 ms  UNSET  
+      tool.lookup_campus_account         TOOL            0 ms  UNSET  
+      tool.check_service_status          TOOL            0 ms  UNSET  
+    specialist                           CHAIN        1707 ms  OK     
+      llm.specialist                     CHAIN        1706 ms  UNSET  route.cost_tier=utility cascade.served_by=[1]
+        llm.specialist.tier1             LLM          1706 ms  UNSET  llm.model_name=ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest tier.position=1
+      ChatOpenAI                         LLM          1702 ms  OK     llm.model_name=qcwind/qwen3-8b-instruct-Q4-K-M:latest
+    writer                               CHAIN       15305 ms  OK     
+      llm.writer                         CHAIN       15301 ms  UNSET  route.cost_tier=frontier cascade.served_by=[0]
+        llm.writer.tier0                 LLM         15301 ms  UNSET  llm.model_name=ollama:gemma4:26b tier.position=0
+      ChatOpenAI                         LLM         15289 ms  OK     llm.model_name=gemma4:26b
+
+18 spans in this trace

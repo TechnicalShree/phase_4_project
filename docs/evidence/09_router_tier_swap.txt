@@ -1,0 +1,15 @@
+=== default routing
+  triage      utility   scripted:demo-utility    $0.000014
+  specialist  utility   scripted:demo-utility    $0.000026
+  writer      frontier  scripted:demo-frontier   $0.000442
+  /stats routes {'triage': 'utility', 'specialist': 'utility', 'writer': 'frontier', 'judge': 'frontier'}
+=== ROUTE_WRITER=utility ROUTE_TRIAGE=frontier
+  triage      frontier  scripted:demo-frontier   $0.000140
+  specialist  utility   scripted:demo-utility    $0.000026
+  writer      utility   scripted:demo-utility    $0.000044
+  /stats routes {'triage': 'frontier', 'specialist': 'utility', 'writer': 'utility', 'judge': 'frontier'}
+=== BUDGET_FRONTIER_USD=0
+  triage      utility   scripted:demo-utility    $0.000014
+  specialist  utility   scripted:demo-utility    $0.000026
+  writer      utility   scripted:demo-utility    $0.000044
+  /stats routes {'triage': 'utility', 'specialist': 'utility', 'writer': 'utility', 'judge': 'utility'}

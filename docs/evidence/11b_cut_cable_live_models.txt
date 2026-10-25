@@ -1,0 +1,100 @@
+$ MODEL_MODE=live TIER_0=ollama:gemma4:26b TIER_1=ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest python scripts/cut_cable.py --repeat 2
+gateway http://127.0.0.1:51398 · tiers ['ollama:gemma4:26b', 'ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest', 'static'] · scratch /var/folders/r4/r3m56svs4hdb7x2ksh0v_29r0000gn/T/cut-cable-grkq8334
+
+==============================================================================
+ROUND 1 · A. HOT-SWAP — primary tier cut after 6 chunks of the answer
+
+[tier 0 · ollama:gemma4:26b] The Wi-Fi service is
+<< fallback agent=writer tier=0 InjectedFault: injected failure: tier 0 cable cut after 6 chunks >>
+[tier 1 · ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest] The Wi-Fi service is degraded due to the North Hall access point NH-02 being degraded, which affects STU-1001's connectivity. Check the campus status page and reconnect to Campus-Secure, then renew the device DHCP lease. A network ticket may be required for building-wide outages. 1. Check campus status page for updates. 2. Reconnect to Campus-Secure Wi-Fi. 3. Renew device DHCP lease via command prompt or settings. 4. If issues persist, open a network ticket for further assistance.
+[final event received, stream closed by server]
+
+ROUND 1 · B. CIRCUIT BREAKER — primary fails outright twice more (threshold 3)
+
+<< circuit_skip agent=writer tier=0 open >>
+[tier 1 · ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest] Diagnosis: The Wi-Fi service is degraded due to the North Hall access point NH-02 being degraded, causing a building-wide outage.  
+
+Next Steps:  
+1. Check the campus status page for updates.  
+2. Reconnect to Campus-Secure.  
+3. Renew your device DHCP lease.  
+4. A network ticket may be required for further resolution.
+[final event received, stream closed by server]
+
+ROUND 1 · C. RECOVERY — wait out the 60s cooldown, half-open trial on tier 0
+   served by tiers [0], breaker closed
+
+ROUND 1 · D. MONITOR — one daemon tick over the drill traffic
+!!! PAGE [latency_p95_ms] measured 25874, objective <= 20000.0
+!!! PAGE [fallback_rate] measured 0.8, objective <= 0.2
+!!! PAGE [circuit_open_events] measured 1, objective <= 0
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000      25874  BREACH  -> PAGED
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4          5  PASS
+judge_score_floor          >= 2.5          5  PASS
+fallback_rate              <= 0.2        0.8  BREACH  -> PAGED
+circuit_open_events          <= 0          1  BREACH  -> PAGED
+
+ROUND 1 SUMMARY
+  PASS  A: HTTP 200 on a single connection
+  PASS  A: first chunks from tier 0, rest from tier 1
+  PASS  A: fallback event announced in-stream
+  PASS  A: stream ended with a final event (no drop)
+  PASS  A: answer = tier-0 chunks + tier-1 chunks, nothing lost
+  PASS  B: circuit opened on the 3rd consecutive failure
+  PASS  B: /stats shows tier 0 breaker open
+  PASS  B: open circuit skips tier 0 (circuit_skip, no tier-0 call)
+  PASS  C: half-open trial served by tier 0, circuit closed
+  PASS  D: fallback_rate tripwire fired and paged
+  PASS  D: circuit_open_events tripwire fired and paged
+
+==============================================================================
+ROUND 2 · A. HOT-SWAP — primary tier cut after 6 chunks of the answer
+
+[tier 0 · ollama:gemma4:26b] Diagnosis: High-severity Wi
+<< fallback agent=writer tier=0 InjectedFault: injected failure: tier 0 cable cut after 6 chunks >>
+[tier 1 · ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest] Diagnosis: High-severity Wi-Fi outage in North Hall is caused by degraded access point NH-02, affecting STU-1001. Next steps: 1. Check campus status page for updates. 2. Reconnect to Campus-Secure. 3. Renew device DHCP lease. 4. If no improvement, open a network ticket for building-wide outage investigation.
+[final event received, stream closed by server]
+
+ROUND 2 · B. CIRCUIT BREAKER — primary fails outright twice more (threshold 3)
+
+<< circuit_skip agent=writer tier=0 open >>
+[tier 1 · ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest] Diagnosis: The Wi-Fi service is degraded due to the North Hall access point NH-02 being degraded.  
+
+Next Steps:  
+1. Check the campus status page for updates.  
+2. Reconnect to Campus-Secure.  
+3. Renew the device DHCP lease.  
+4. Open a network ticket for building-wide outage resolution.
+[final event received, stream closed by server]
+
+ROUND 2 · C. RECOVERY — wait out the 60s cooldown, half-open trial on tier 0
+   served by tiers [0], breaker closed
+
+ROUND 2 · D. MONITOR — one daemon tick over the drill traffic
+!!! PAGE [latency_p95_ms] measured 25354, objective <= 20000.0
+!!! PAGE [fallback_rate] measured 0.8, objective <= 0.2
+!!! PAGE [circuit_open_events] measured 2, objective <= 0
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000      25354  BREACH  -> PAGED
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4          5  PASS
+judge_score_floor          >= 2.5          5  PASS
+fallback_rate              <= 0.2        0.8  BREACH  -> PAGED
+circuit_open_events          <= 0          2  BREACH  -> PAGED
+
+ROUND 2 SUMMARY
+  PASS  A: HTTP 200 on a single connection
+  PASS  A: first chunks from tier 0, rest from tier 1
+  PASS  A: fallback event announced in-stream
+  PASS  A: stream ended with a final event (no drop)
+  PASS  A: answer = tier-0 chunks + tier-1 chunks, nothing lost
+  PASS  B: circuit opened on the 3rd consecutive failure
+  PASS  B: /stats shows tier 0 breaker open
+  PASS  B: open circuit skips tier 0 (circuit_skip, no tier-0 call)
+  PASS  C: half-open trial served by tier 0, circuit closed
+  PASS  D: fallback_rate tripwire fired and paged
+  PASS  D: circuit_open_events tripwire fired and paged
+
+CUT CABLE: 2/2 rounds passed -> PASS

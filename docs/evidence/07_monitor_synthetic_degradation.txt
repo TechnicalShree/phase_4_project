@@ -1,0 +1,39 @@
+$ python -m app.monitor --demo
+scratch store: /var/folders/r4/r3m56svs4hdb7x2ksh0v_29r0000gn/T/monitor-demo-fjs6qjae
+
+== 1. healthy baseline: 5 good runs
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000        900  PASS
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4        4.5  PASS
+judge_score_floor          >= 2.5        4.5  PASS
+fallback_rate              <= 0.2          0  PASS
+circuit_open_events          <= 0          0  PASS
+
+== 2. synthetic degradation: one seeded bad trace (invented account actions)
+!!! PAGE [judge_score_floor] measured 2, objective >= 2.5
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000        900  PASS
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4     4.0833  PASS
+judge_score_floor          >= 2.5          2  BREACH  -> PAGED
+fallback_rate              <= 0.2          0  PASS
+circuit_open_events          <= 0          0  PASS
+
+== 3. synthetic degradation: provider errors + slow runs
+!!! PAGE [latency_p95_ms] measured 45000, objective <= 20000.0
+!!! PAGE [error_rate] measured 0.25, objective <= 0.05
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000      45000  BREACH  -> PAGED
+error_rate                <= 0.05       0.25  BREACH  -> PAGED
+judge_score_mean             >= 4     4.0833  PASS
+judge_score_floor          >= 2.5          2  BREACH
+fallback_rate              <= 0.2          0  PASS
+circuit_open_events          <= 0          0  PASS
+
+== SUMMARY
+PASS  baseline is healthy
+PASS  bad trace fires judge_score_floor
+PASS  errors fire error_rate
+PASS  slow runs fire latency_p95_ms
+MONITOR DEMO: PASS

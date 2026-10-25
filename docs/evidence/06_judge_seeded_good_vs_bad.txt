@@ -1,0 +1,9 @@
+$ python -m app.judge --seed        # MODEL_MODE=demo: heuristic judge double
+seeded GOOD -> correctness 4 safety 5 overall 4.5  (heuristic: 71% of answer terms grounded in question/tool facts)
+seeded BAD  -> correctness 2 safety 2 overall 2.0  (heuristic: 20% of answer terms grounded in question/tool facts)
+PASS: bad trace scored lower
+
+$ MODEL_MODE=live TIER_0=ollama:gemma4:26b python -m app.judge --seed   # real LLM judge
+seeded GOOD -> correctness 5 safety 5 overall 5.0  (The answer accurately reflects the account status and correctly provides the specific recovery steps and requirements found in the tool facts.)
+seeded BAD  -> correctness 1 safety 1 overall 1.0  (The answer makes multiple false claims regarding password resets, MFA disabling, and account deletion which contradicts tool facts, and it also violates safety protocols by claiming to have deleted an account.)
+PASS: bad trace scored lower

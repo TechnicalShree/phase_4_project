@@ -1,0 +1,151 @@
+$ python scripts/cut_cable.py --repeat 3      # MODEL_MODE=demo
+gateway http://127.0.0.1:51778 · tiers ['scripted:demo-frontier', 'scripted:demo-utility', 'static'] · scratch /var/folders/r4/r3m56svs4hdb7x2ksh0v_29r0000gn/T/cut-cable-s1caj970
+
+==============================================================================
+ROUND 1 · A. HOT-SWAP — primary tier cut after 6 chunks of the answer
+
+[tier 0 · scripted:demo-frontier] Campus IT (network, high severity):
+Check 
+<< fallback agent=writer tier=0 InjectedFault: injected failure: tier 0 cable cut after 6 chunks >>
+[tier 1 · scripted:demo-utility] the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket.
+Account record: role student, status active, mfa enrolled, residence North Hall.
+Service status: wifi is degraded.
+This is high severity: the service desk should open a ticket now.
+[final event received, stream closed by server]
+
+ROUND 1 · B. CIRCUIT BREAKER — primary fails outright twice more (threshold 3)
+
+<< circuit_skip agent=writer tier=0 open >>
+[tier 1 · scripted:demo-utility] Campus IT (network, high severity):
+Check the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket.
+Account record: role student, status active, mfa enrolled, residence North Hall.
+Service status: wifi is degraded.
+This is high severity: the service desk should open a ticket now.
+[final event received, stream closed by server]
+
+ROUND 1 · C. RECOVERY — wait out the 3s cooldown, half-open trial on tier 0
+   served by tiers [0], breaker closed
+
+ROUND 1 · D. MONITOR — one daemon tick over the drill traffic
+!!! PAGE [fallback_rate] measured 0.8, objective <= 0.2
+!!! PAGE [circuit_open_events] measured 1, objective <= 0
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000     2243.5  PASS
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4        4.5  PASS
+judge_score_floor          >= 2.5        4.5  PASS
+fallback_rate              <= 0.2        0.8  BREACH  -> PAGED
+circuit_open_events          <= 0          1  BREACH  -> PAGED
+
+ROUND 1 SUMMARY
+  PASS  A: HTTP 200 on a single connection
+  PASS  A: first chunks from tier 0, rest from tier 1
+  PASS  A: fallback event announced in-stream
+  PASS  A: stream ended with a final event (no drop)
+  PASS  A: answer = tier-0 chunks + tier-1 chunks, nothing lost
+  PASS  B: circuit opened on the 3rd consecutive failure
+  PASS  B: /stats shows tier 0 breaker open
+  PASS  B: open circuit skips tier 0 (circuit_skip, no tier-0 call)
+  PASS  C: half-open trial served by tier 0, circuit closed
+  PASS  D: fallback_rate tripwire fired and paged
+  PASS  D: circuit_open_events tripwire fired and paged
+
+==============================================================================
+ROUND 2 · A. HOT-SWAP — primary tier cut after 6 chunks of the answer
+
+[tier 0 · scripted:demo-frontier] Campus IT (network, high severity):
+Check 
+<< fallback agent=writer tier=0 InjectedFault: injected failure: tier 0 cable cut after 6 chunks >>
+[tier 1 · scripted:demo-utility] the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket.
+Account record: role student, status active, mfa enrolled, residence North Hall.
+Service status: wifi is degraded.
+This is high severity: the service desk should open a ticket now.
+[final event received, stream closed by server]
+
+ROUND 2 · B. CIRCUIT BREAKER — primary fails outright twice more (threshold 3)
+
+<< circuit_skip agent=writer tier=0 open >>
+[tier 1 · scripted:demo-utility] Campus IT (network, high severity):
+Check the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket.
+Account record: role student, status active, mfa enrolled, residence North Hall.
+Service status: wifi is degraded.
+This is high severity: the service desk should open a ticket now.
+[final event received, stream closed by server]
+
+ROUND 2 · C. RECOVERY — wait out the 3s cooldown, half-open trial on tier 0
+   served by tiers [0], breaker closed
+
+ROUND 2 · D. MONITOR — one daemon tick over the drill traffic
+!!! PAGE [fallback_rate] measured 0.8, objective <= 0.2
+!!! PAGE [circuit_open_events] measured 2, objective <= 0
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000       2245  PASS
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4        4.5  PASS
+judge_score_floor          >= 2.5        4.5  PASS
+fallback_rate              <= 0.2        0.8  BREACH  -> PAGED
+circuit_open_events          <= 0          2  BREACH  -> PAGED
+
+ROUND 2 SUMMARY
+  PASS  A: HTTP 200 on a single connection
+  PASS  A: first chunks from tier 0, rest from tier 1
+  PASS  A: fallback event announced in-stream
+  PASS  A: stream ended with a final event (no drop)
+  PASS  A: answer = tier-0 chunks + tier-1 chunks, nothing lost
+  PASS  B: circuit opened on the 3rd consecutive failure
+  PASS  B: /stats shows tier 0 breaker open
+  PASS  B: open circuit skips tier 0 (circuit_skip, no tier-0 call)
+  PASS  C: half-open trial served by tier 0, circuit closed
+  PASS  D: fallback_rate tripwire fired and paged
+  PASS  D: circuit_open_events tripwire fired and paged
+
+==============================================================================
+ROUND 3 · A. HOT-SWAP — primary tier cut after 6 chunks of the answer
+
+[tier 0 · scripted:demo-frontier] Campus IT (network, high severity):
+Check 
+<< fallback agent=writer tier=0 InjectedFault: injected failure: tier 0 cable cut after 6 chunks >>
+[tier 1 · scripted:demo-utility] the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket.
+Account record: role student, status active, mfa enrolled, residence North Hall.
+Service status: wifi is degraded.
+This is high severity: the service desk should open a ticket now.
+[final event received, stream closed by server]
+
+ROUND 3 · B. CIRCUIT BREAKER — primary fails outright twice more (threshold 3)
+
+<< circuit_skip agent=writer tier=0 open >>
+[tier 1 · scripted:demo-utility] Campus IT (network, high severity):
+Check the campus status page, reconnect to Campus-Secure, and renew the device DHCP lease. North Hall access point NH-02 is degraded. Building-wide outages require a network ticket.
+Account record: role student, status active, mfa enrolled, residence North Hall.
+Service status: wifi is degraded.
+This is high severity: the service desk should open a ticket now.
+[final event received, stream closed by server]
+
+ROUND 3 · C. RECOVERY — wait out the 3s cooldown, half-open trial on tier 0
+   served by tiers [0], breaker closed
+
+ROUND 3 · D. MONITOR — one daemon tick over the drill traffic
+!!! PAGE [fallback_rate] measured 0.8, objective <= 0.2
+!!! PAGE [circuit_open_events] measured 3, objective <= 0
+SLO                     objective   measured  status
+latency_p95_ms           <= 20000     2264.2  PASS
+error_rate                <= 0.05          0  PASS
+judge_score_mean             >= 4        4.5  PASS
+judge_score_floor          >= 2.5        4.5  PASS
+fallback_rate              <= 0.2        0.8  BREACH  -> PAGED
+circuit_open_events          <= 0          3  BREACH  -> PAGED
+
+ROUND 3 SUMMARY
+  PASS  A: HTTP 200 on a single connection
+  PASS  A: first chunks from tier 0, rest from tier 1
+  PASS  A: fallback event announced in-stream
+  PASS  A: stream ended with a final event (no drop)
+  PASS  A: answer = tier-0 chunks + tier-1 chunks, nothing lost
+  PASS  B: circuit opened on the 3rd consecutive failure
+  PASS  B: /stats shows tier 0 breaker open
+  PASS  B: open circuit skips tier 0 (circuit_skip, no tier-0 call)
+  PASS  C: half-open trial served by tier 0, circuit closed
+  PASS  D: fallback_rate tripwire fired and paged
+  PASS  D: circuit_open_events tripwire fired and paged
+
+CUT CABLE: 3/3 rounds passed -> PASS

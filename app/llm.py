@@ -19,6 +19,7 @@ ENDPOINTS = {  # kind -> (base_url, api-key env var)
     'openrouter': ('https://openrouter.ai/api/v1', 'OPENROUTER_API_KEY'),
     'openai': (os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1'), 'OPENAI_API_KEY'),
     'ollama': (os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434/v1'), None),
+    'vllm': (os.getenv('VLLM_BASE_URL', 'http://localhost:8001/v1'), None),  # `vllm serve <model>` on a GPU host
 }
 # Router: each agent has a cost tier; a cost tier is a starting position in the tier list.
 ROUTES = {'triage': 'utility', 'specialist': 'utility', 'writer': 'frontier', 'judge': 'frontier'}
@@ -38,7 +39,7 @@ def tiers():
 def chat_model(spec):
     kind, _, name = spec.partition(':')
     base_url, key_env = ENDPOINTS[kind]
-    key = os.getenv(key_env) if key_env else 'ollama'
+    key = os.getenv(key_env) if key_env else 'not-needed'  # local servers ignore the key
     if not key:
         raise RuntimeError(f'{spec} needs {key_env} in .env')
     return ChatOpenAI(model=name, base_url=base_url, api_key=key, timeout=60, max_retries=0,

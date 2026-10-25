@@ -1,0 +1,16 @@
+$ curl -s localhost:8000/health
+{"status":"ok","tiers":["ollama:gemma4:26b","ollama:qcwind/qwen3-8b-instruct-Q4-K-M:latest","static"]}
+
+$ curl -s -X POST localhost:8000/analyze -H 'Content-Type: application/json' -d '{"question":"I am locked out of STU-1002 and MFA keeps failing"}'
+{
+    "run_id": "2f13ca88167f",
+    "trace_id": "b4e6811991ab2874b7e6f54eb16f1a57",
+    "status": "ok",
+    "error": null,
+    "latency_ms": 21734.4,
+    "cost_usd": 0.0007694,
+    "cached": false,
+    "category": "account",
+    "severity": "high",
+    "answer": "Diagnosis: Your student account is locked and MFA recovery is required.\n\nNext steps:\n1. Visit the campus password portal to begin the recovery process.\n2. Complete an in-person ID check at the portal to verify your identity for MFA recovery.\n3. Because this is a high-severity issue, a ticket should be opened.\n\nNote: Account deletion requires review by an authorized administrator and cannot be performed automatically."
+}

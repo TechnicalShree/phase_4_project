@@ -1,0 +1,28 @@
+$ MODEL_MODE=live python -m app.swarm "My laptop battery is swollen and hot, what do I do?"
+
+[agent] triage
+
+[agent] researcher
+
+[tool_call] search_knowledge_base
+
+[agent] specialist
+
+[agent] writer
+Diagnosis: Do not charge the swollen battery, as it could cause further damage or safety risks. Immediately disconnect the laptop from any power source and stop using it. A technician must inspect the device for smoke, heat, liquid damage, or battery swelling.
+
+Next steps:
+1. Record the asset tag.
+2. Disconnect the laptop from any power source and stop using it.
+3. Disconnect any unsafe devices.
+4. Do not attempt to charge the swollen battery.
+5. Because this is a high-severity issue, a ticket should be opened.
+6. A technician must inspect the device for smoke, heat, liquid damage, or battery swelling.
+
+final state: {
+ "question": "My laptop battery is swollen and hot, what do I do?",
+ "category": "hardware",
+ "severity": "high",
+ "diagnosis": "Do not charge the swollen battery, as it could cause further damage or safety risks. Immediately disconnect the laptop from any power source and stop using it. A technician must inspect the device for smoke, heat, liquid damage, or battery swelling.",
+ "answer": "Diagnosis: Do not charge the swollen battery, as it could cause further damage or safety risks. Immediately disconnect the laptop from any power source and stop using it. A technician must inspect the device for smoke, heat, liquid damage, or battery swelling.\n\nNext steps:\n1. Record the asset tag.\n2. Disconnect the laptop from any power source and stop using it.\n3. Disconnect any unsafe devices.\n4. Do not attempt to charge the swollen battery.\n5. Because this is a high-severity issue, a ticket should be opened.\n6. A technician must inspect the device for smoke, heat, liquid damage, or battery swelling."
+}

@@ -5,6 +5,7 @@ import queue
 import threading
 import time
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
@@ -17,7 +18,18 @@ from app.swarm import GRAPH
 from app.tracing import ids, tracer
 
 tracing.setup()
-app = FastAPI(title='Campus IT Swarm Gateway')
+
+
+@asynccontextmanager
+async def lifespan(app):
+    # Jobs run in-process: any job still queued/running at boot died with the previous process.
+    store.execute("UPDATE jobs SET status='failed', result='{\"error\": \"server restarted\"}' "
+                  "WHERE status IN ('queued', 'running')")
+    cache.embed('warm up')  # load the ONNX embedding model at boot, not on the first request
+    yield
+
+
+app = FastAPI(title='Campus IT Swarm Gateway', lifespan=lifespan)
 
 
 class Ask(BaseModel):
@@ -122,12 +134,6 @@ def get_job(job_id: str):
     return job
 
 
-@app.on_event('startup')
-def fail_orphaned_jobs():
-    """Jobs live in-process: any job still queued/running at boot died with the previous process."""
-    store.execute("UPDATE jobs SET status='failed', result='{\"error\": \"server restarted\"}' "
-                  "WHERE status IN ('queued', 'running')")
-
 
 @app.get('/stats')
 def stats():
@@ -164,7 +170,3 @@ def clear_fault():
     cascade.clear_faults()
     return {'armed': cascade.FAULTS}
 
-
-@app.on_event('startup')
-def warm_embeddings():
-    cache.embed('warm up')  # load the ONNX model once at boot, not on the first request

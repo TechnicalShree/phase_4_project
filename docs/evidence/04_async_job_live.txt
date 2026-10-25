@@ -1,0 +1,25 @@
+$ curl -s -X POST localhost:8000/analyze/async -d '{"question":"Printer in the library jams and smells like burning"}'
+{"job_id":"5b672f5508b5","status":"queued","poll":"/jobs/5b672f5508b5"}
+# client disconnected; polling later
+$ curl -s localhost:8000/jobs/5b672f5508b5
+{"id":"5b672f5508b5","question":"Printer in the library jams and smells like burning","status":"running","result":null,"created_at":1792908910.009,"updated_at":1792908910.015}
+$ curl -s localhost:8000/jobs/5b672f5508b5   (40 s later)
+{
+    "id": "5b672f5508b5",
+    "question": "Printer in the library jams and smells like burning",
+    "status": "done",
+    "result": {
+        "run_id": "2616344eadf2",
+        "trace_id": "27c1a3146ee2de5a2f24efe65aa5516a",
+        "status": "ok",
+        "error": null,
+        "latency_ms": 20348.2,
+        "cost_usd": 0.000687,
+        "cached": false,
+        "category": "hardware",
+        "severity": "high",
+        "answer": "Diagnosis: The printer's smell of burning suggests possible electrical issues or overheating, which could be caused by a faulty power supply or internal wiring. This is a high-severity issue; a ticket should be opened.\n\nNext steps:\n1. Disconnect the printer immediately.\n2. Record the asset tag.\n3. Disconnect any unsafe devices.\n4. Do not attempt to use or charge the device further.\n5. A technician must inspect the unit for damage."
+    },
+    "created_at": 1792908910.009,
+    "updated_at": 1792908930.567
+}

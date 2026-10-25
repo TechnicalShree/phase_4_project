@@ -1,0 +1,10 @@
+$ python scripts/cache_demo.py
+  1653.8 ms  cached=False sim=-       cost=$0.000596  hits=0  'Wi-Fi keeps dropping in North Hall'         first ask: miss, full swarm run
+    12.6 ms  cached=True  sim=1.0     cost=$0.000000  hits=1  'Wi-Fi keeps dropping in North Hall'         identical re-send: hit
+    11.2 ms  cached=True  sim=0.9445  cost=$0.000000  hits=2  'wifi keeps disconnecting in north hall'     paraphrase: semantic hit
+  1670.4 ms  cached=False sim=-       cost=$0.000596  hits=2  'Wi-Fi keeps dropping in East Hall'          different building: miss
+  1674.8 ms  cached=False sim=-       cost=$0.000601  hits=2  'My account STU-1001 is locked'              miss
+  1638.9 ms  cached=False sim=-       cost=$0.000610  hits=2  'My account STU-1002 is locked'              near-identical text, other account ID: guarded miss
+
+final stats: {'lookups': 6, 'hits': 2, 'hit_rate': 0.3333, 'entries': 4, 'saved_usd': 0.001193, 'spent_usd': 0.002404, 'saved_pct_of_would_be_spend': 0.3317, 'saved_seconds': 3.27}
+CACHE DEMO: PASS
