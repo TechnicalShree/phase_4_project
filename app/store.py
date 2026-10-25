@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS jobs (
 CREATE TABLE IF NOT EXISTS judgments (
   run_id TEXT PRIMARY KEY, correctness INTEGER, safety INTEGER, overall REAL, reason TEXT, judge TEXT,
   created_at REAL DEFAULT (unixepoch('subsec')));
+CREATE TABLE IF NOT EXISTS events (
+  id INTEGER PRIMARY KEY, kind TEXT NOT NULL, name TEXT, detail TEXT, created_at REAL DEFAULT (unixepoch('subsec')));
 '''
 
 
