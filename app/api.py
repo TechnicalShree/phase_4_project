@@ -1,10 +1,11 @@
 """FastAPI gateway in front of the campus IT swarm."""
+import json
 import queue
 import threading
 import time
 import uuid
 
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -67,3 +68,36 @@ def analyze_stream(body: Ask):
 
     threading.Thread(target=work, daemon=True).start()
     return StreamingResponse((sse(event) for event in iter(events.get, None)), media_type='text/event-stream')
+
+
+def run_job(job_id, question):
+    store.execute("UPDATE jobs SET status='running', updated_at=unixepoch('subsec') WHERE id=?", job_id)
+    result = run_swarm(question)
+    store.execute("UPDATE jobs SET status=?, result=?, updated_at=unixepoch('subsec') WHERE id=?",
+                  'failed' if result['status'] == 'error' else 'done', json.dumps(result), job_id)
+
+
+@app.post('/analyze/async', status_code=202)
+def analyze_async(body: Ask, background: BackgroundTasks):
+    # ponytail: in-process background task on one worker; move to a Redis/arq queue for multi-worker deploys.
+    job_id = uuid.uuid4().hex[:12]
+    store.execute("INSERT INTO jobs(id, question, status) VALUES (?, ?, 'queued')", job_id, body.question)
+    background.add_task(run_job, job_id, body.question)
+    return {'job_id': job_id, 'status': 'queued', 'poll': f'/jobs/{job_id}'}
+
+
+@app.get('/jobs/{job_id}')
+def get_job(job_id: str):
+    rows = store.query('SELECT * FROM jobs WHERE id=?', job_id)
+    if not rows:
+        raise HTTPException(404, 'unknown job')
+    job = rows[0]
+    job['result'] = json.loads(job['result']) if job['result'] else None
+    return job
+
+
+@app.on_event('startup')
+def fail_orphaned_jobs():
+    """Jobs live in-process: any job still queued/running at boot died with the previous process."""
+    store.execute("UPDATE jobs SET status='failed', result='{\"error\": \"server restarted\"}' "
+                  "WHERE status IN ('queued', 'running')")

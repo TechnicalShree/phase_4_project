@@ -8,6 +8,9 @@ SCHEMA = '''
 CREATE TABLE IF NOT EXISTS runs (
   id TEXT PRIMARY KEY, question TEXT NOT NULL, answer TEXT, category TEXT, severity TEXT,
   status TEXT NOT NULL, error TEXT, latency_ms REAL, created_at REAL DEFAULT (unixepoch('subsec')));
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY, question TEXT NOT NULL, status TEXT NOT NULL, result TEXT,
+  created_at REAL DEFAULT (unixepoch('subsec')), updated_at REAL);
 '''
 
 
