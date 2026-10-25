@@ -26,12 +26,19 @@ class TokenEvent(BaseModel):
     text: str
 
 
+class CacheHitEvent(BaseModel):
+    type: Literal['cache_hit']
+    similarity: float
+    cached_question: str
+    saved_usd: float | None
+
+
 class FinalEvent(BaseModel):
     type: Literal['final', 'error']
     result: dict
 
 
-Event = TypeAdapter(Annotated[RunEvent | AgentEvent | ToolCallEvent | TokenEvent | FinalEvent,
+Event = TypeAdapter(Annotated[RunEvent | AgentEvent | ToolCallEvent | TokenEvent | CacheHitEvent | FinalEvent,
                               Field(discriminator='type')])
 
 

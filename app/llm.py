@@ -6,7 +6,9 @@ from functools import lru_cache
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langgraph.config import get_config
 
+from app import store
 from app.tracing import node_context, tracer
 
 load_dotenv()
@@ -52,8 +54,30 @@ def stream_text(spec, messages, offline):
                 yield chunk.content
 
 
+def price(position):
+    """Notional USD per 1M tokens by tier position. Local Ollama and the scripted doubles have no invoice;
+    they are priced as the hosted tier they stand in for, so the cost model has something to save."""
+    return [float(os.getenv('TIER_0_USD_PER_MTOK', '2.0')), float(os.getenv('TIER_1_USD_PER_MTOK', '0.2')), 0.0][position]
+
+
+def current_run_id():
+    try:
+        return get_config()['configurable'].get('run_id')
+    except RuntimeError:  # called outside the graph (e.g. the judge)
+        return None
+
+
+def record(agent, position, spec, messages, text):
+    # ponytail: ~4 chars/token estimate; read provider usage_metadata if billing-grade accuracy is needed.
+    tokens = (sum(len(str(m[1])) for m in messages) + len(text)) // 4
+    cost = tokens * price(position) / 1e6
+    store.execute('INSERT INTO llm_calls(run_id, agent, position, model, tokens, cost_usd) VALUES (?,?,?,?,?,?)',
+                  current_run_id(), agent, position, spec, tokens, cost)
+
+
 def stream(agent, messages, offline):
-    spec = tiers()[0]
+    position = 0
+    spec = tiers()[position]
     with tracer.start_as_current_span(f'llm.{agent}', context=node_context(), attributes={
             'openinference.span.kind': 'LLM', 'llm.model_name': spec, 'agent': agent,
             'input.value': str(messages[-1][1])}) as span:
@@ -62,6 +86,7 @@ def stream(agent, messages, offline):
             text += chunk
             yield chunk
         span.set_attribute('output.value', text)
+        record(agent, position, spec, messages, text)
 
 
 def complete(agent, messages, offline):

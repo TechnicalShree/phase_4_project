@@ -7,19 +7,24 @@ from opentelemetry import trace
 PHOENIX = os.getenv('PHOENIX_COLLECTOR_ENDPOINT', 'http://localhost:6006')
 PROJECT = os.getenv('PHOENIX_PROJECT_NAME', 'campus-it-swarm')
 tracer = trace.get_tracer('campus-it-swarm')
+ENABLED = False
 
 
 def setup():
-    if os.getenv('TRACING', '1') == '0':
+    global ENABLED
+    if ENABLED or os.getenv('TRACING', '1') == '0':
         return
     from openinference.instrumentation.langchain import LangChainInstrumentor
     from phoenix.otel import register
     provider = register(endpoint=f'{PHOENIX}/v1/traces', project_name=PROJECT, batch=True, verbose=False)
     LangChainInstrumentor().instrument(tracer_provider=provider)
+    ENABLED = True
 
 
 def node_context():
     """OTel context of the running LangGraph node, so manual LLM spans nest under their agent."""
+    if not ENABLED:
+        return None
     try:
         from openinference.instrumentation.langchain import get_current_span
         span = get_current_span()
